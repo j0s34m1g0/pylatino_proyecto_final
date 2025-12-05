@@ -1,0 +1,143 @@
+import base64
+import os # Aunque no se usa completamente, es bueno tenerlo para futuras mejoras
+
+# Diccionario para almacenar las contraseñas temporalmente: {sitio: contraseña_codificada}
+# NOTA: Las contraseñas se pierden al cerrar el programa; la persistencia (guardar en archivo) es una mejora futura.
+contrasenas_guardadas = {} 
+
+# =================================================================
+# 1. FUNCIONES DE LÓGICA Y CÁLCULO (Codificación/Decodificación)
+# =================================================================
+
+def codificar_contrasena(contrasena_texto):
+    """Codifica una cadena de texto a bytes codificados en Base64."""
+    # 1. Convertir string a bytes
+    bytes_contrasena = contrasena_texto.encode('utf-8')
+    # 2. Codificar los bytes en base64
+    contrasena_codificada = base64.b64encode(bytes_contrasena)
+    return contrasena_codificada
+
+def decodificar_contrasena(contrasena_codificada):
+    """Decodifica bytes codificados en Base64 de vuelta a una cadena de texto."""
+    # 1. Decodificar Base64 a bytes
+    bytes_decodificados = base64.b64decode(contrasena_codificada)
+    # 2. Convertir los bytes a string
+    contrasena_decodificada = bytes_decodificados.decode('utf-8')
+    return contrasena_decodificada
+
+# =================================================================
+# 2. FUNCIONES DE INTERACCIÓN CON LOS DATOS (Llaman a la lógica)
+# =================================================================
+
+def agregar_contrasena(sitio, contrasena):
+    """Agrega un nuevo sitio con su contraseña codificada al diccionario."""
+    if sitio in contrasenas_guardadas:
+        print(f"\n⚠️ El sitio '{sitio}' ya existe. No se ha agregado.")
+        return
+        
+    contrasena_codif = codificar_contrasena(contrasena)
+    contrasenas_guardadas[sitio] = contrasena_codif
+    print(f"\n✅ Contraseña para '{sitio}' agregada y codificada exitosamente.\n")
+
+def obtener_contrasena(sitio):
+    """Busca y decodifica una contraseña, o devuelve None si no existe."""
+    if sitio in contrasenas_guardadas:
+        contrasena_codificada = contrasenas_guardadas[sitio]
+        return decodificar_contrasena(contrasena_codificada)
+    return None
+
+def eliminar_contrasena(sitio):
+    """Elimina una contraseña del diccionario y retorna si fue exitoso."""
+    if sitio in contrasenas_guardadas:
+        contrasenas_guardadas.pop(sitio)
+        return True
+    return False
+
+# =================================================================
+# 3. FUNCIONES DE INTERFAZ DE CONSOLA (Pidiendo y mostrando datos)
+# =================================================================
+
+def pedir_y_agregar():
+    """Pide los datos al usuario y llama a la función para agregar."""
+    print("\n--- AGREGAR NUEVA CONTRASEÑA ---")
+    sitio = input("➡️ Ingrese el nombre del sitio web/servicio: ").strip()
+    contrasena = input("➡️ Ingrese la contraseña: ").strip()
+    
+    if sitio and contrasena:
+        agregar_contrasena(sitio, contrasena)
+    else:
+        print("\n❌ Error: Debe ingresar un nombre de sitio y una contraseña.\n")
+
+def mostrar_una_contrasena():
+    """Pide un sitio, busca su contraseña, la decodifica y la muestra."""
+    if not contrasenas_guardadas:
+        print("\n❌ No hay contraseñas guardadas aún para consultar.\n")
+        return
+        
+    sitio = input("➡️ Ingrese el nombre del sitio para ver su contraseña: ").strip()
+    
+    contrasena_texto = obtener_contrasena(sitio)
+    
+    if contrasena_texto:
+        print(f"\n🔐 Contraseña para '{sitio}': **{contrasena_texto}**\n")
+    else:
+        print(f"\n❌ El sitio '{sitio}' no fue encontrado.\n")
+        
+def mostrar_todos_los_sitios():
+    """Muestra solo la lista de todos los sitios guardados."""
+    if not contrasenas_guardadas:
+        print("\n❌ No hay contraseñas guardadas aún.\n")
+        return
+
+    print("\n--- 🌐 SITIOS GUARDADOS ---")
+    # Mostrar sitios de manera limpia
+    for sitio in sorted(contrasenas_guardadas.keys()):
+        print(f"| * {sitio}")
+    print("--------------------------\n")
+        
+def pedir_y_eliminar():
+    """Pide el sitio y llama a la función para eliminar."""
+    sitio = input("➡️ Ingrese el nombre del sitio a eliminar: ").strip()
+    
+    if eliminar_contrasena(sitio):
+        print(f"\n🗑️ Contraseña para '{sitio}' eliminada exitosamente.\n")
+    else:
+        print(f"\n❌ El sitio '{sitio}' no fue encontrado para eliminar.\n")
+
+# =================================================================
+# 4. FUNCIÓN PRINCIPAL (MENÚ)
+# =================================================================
+
+def menu_principal():
+    """Función principal que muestra el menú y maneja el flujo del programa."""
+    
+    while True:
+        print("="*40)
+        print("🔒 Administrador de Contraseñas (v1.0)")
+        print("="*40)
+        print("1. Agregar nueva contraseña")
+        print("2. Ver **lista** de sitios guardados")
+        print("3. Ver una contraseña **específica**")
+        print("4. Eliminar contraseña")
+        print("5. Salir")
+        print("="*40)
+        
+        opcion = input("Seleccione una opción (1-5): ").strip()
+        
+        if opcion == '1':
+            pedir_y_agregar()
+        elif opcion == '2':
+            mostrar_todos_los_sitios()
+        elif opcion == '3':
+            mostrar_una_contrasena()
+        elif opcion == '4':
+            pedir_y_eliminar()
+        elif opcion == '5':
+            print("\n¡Gracias por usar el administrador de contraseñas! ¡Adiós! 👋\n")
+            break
+        else:
+            print("\n⚠️ Opción no válida. Por favor, intente de nuevo.\n")
+
+# Bloque de ejecución principal
+if __name__ == "__main__":
+    menu_principal()
